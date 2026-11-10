@@ -1,4 +1,5 @@
 import sys
+import os
 from typing import Literal
 
 from dotenv import load_dotenv
@@ -15,6 +16,26 @@ class Triage(BaseModel):
     summary: str = Field(max_length=150)
 
 
+EXAMPLES = """
+<examples>
+<example>
+<ticket>Shipment AF-55102 to Surat came a week late and the carton was soaked through.</ticket>
+{"category": "damage", "urgency": "high", "summary": "Customer reports shipment AF-55102 to Surat arrived a week late with a soaked carton."}
+</example>
+
+<example>
+<ticket>any update??</ticket>
+{"category": "other", "urgency": "low", "summary": "Customer asks for an update without giving shipment details."}
+</example>
+
+<example>
+<ticket>I cancelled order AF-30117 to Lucknow last week but still haven't got my refund.</ticket>
+{"category": "billing", "urgency": "medium", "summary": "Customer awaits a refund for cancelled order AF-30117 to Lucknow."}
+</example>
+</examples>
+"""
+
+
 SYSTEM_PROMPT = """You classify Acme Freight support tickets.
 Return ONLY a JSON object, no prose, no code fences:
 {"category": "...", "urgency": "...", "summary": "..."}
@@ -29,6 +50,9 @@ urgency: high = damaged/lost goods or angry customer; medium = delay, billing di
 summary: one sentence, under 20 words, in third person (e.g. "Customer reports..."); never copy the customer's words
 </rules>
 """
+
+if os.getenv("FEWSHOT", "1") == "1":
+    SYSTEM_PROMPT += EXAMPLES
 
 
 def call_model(messages: list[dict]) -> str:

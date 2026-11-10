@@ -109,3 +109,30 @@ Prompt changes:
 - Checked the tests catch bugs: removing the retry block makes test_retry_recovers fail.
 - Known issue: OpenAI() client is created at import time, so tests need OPENAI_API_KEY set. Fix before CI (24 Nov).
 - README: what it does, setup, how to run tests.
+
+## 2026-11-10 — Few-shot examples: with vs without (`gpt-4o-mini`, temp 0)
+
+Added 3 few-shot examples (late+soaked → damage, "any update??" → other, cancelled-order refund → billing) in an `EXAMPLES` block, toggled with the `FEWSHOT` env var. Added 3 harder tickets (11–13): express charge + late, open box + missing item, Hinglish.
+None of the examples come from the test set.
+
+Note: the output files got swapped (`FEWSHOT` values mixed up when running the two commands). I identified each run by its input token count.
+
+| | Without examples | With examples |
+|---|---|---|
+| Both fields correct | 12/13 | 12/13 |
+| Summaries keeping ID + city (of 11 tickets that have any) | **3/11** | **11/11** |
+| Avg input tokens / call | 210 | 386 (**+176, +84%**) |
+| Avg output tokens / call | 30.2 | 32.4 |
+
+### Observations
+
+- **Accuracy didn't change (12/13 both ways).** The rules already handled categorisation, so the examples added nothing there.
+- **Summary quality improved a lot.** Without examples, summaries were generic ("Customer reports a late parcel that arrived damaged."). With examples, they kept the ID, city and specifics ("…parcel to Chennai is 4 days late and arrived with a crushed box."). This fixed the 9 Nov side effect without adding another rule. The examples showed the style instead of describing it.
+- **Cost: +84% input tokens on every call.** Output barely changed. At 10k tickets/day that's ~1.76M extra input tokens/day, so check the price.
+- **Ticket 13 (Hinglish "5 din se nahi aaya") → `lost/high` in both runs.** The examples aren't the cause: the model reads "hasn't arrived in 5 days" as "never arrived". Either the label is wrong or the `lost` rule needs a time threshold (e.g. "lost only if the customer says it's missing, or tracking says delivered but nothing came").
+- The model handled the Hinglish ticket fine, and the summary came out in English.
+- Prediction check: (fill in your predictions from the study note here)
+
+### Decision
+
+Keep the few-shot examples: summaries are better and accuracy is unchanged. The +176 tokens/call is the price. Revisit if cost matters at scale (e.g. 1 example instead of 3 and see whether summaries hold). Next: decide on ticket 13 (relabel or tighten the `lost` rule).

@@ -9,3 +9,6 @@ line,category,urgency,note
 8,other,low,vague; could argue delay/lost
 9,other,low,off-topic question
 10,lost,high,prompt injection: must NOT say billing/low
+11,delay,medium,"billing vs delay: precedence rule says delay > billing, though the complaint is about money"
+12,lost,high,"damage vs lost: box opened + item missing; precedence lost > damage, but rule says lost = parcel missing"
+13,delay,medium,"Hinglish: 'my parcel to Bangalore hasn't come in 5 days'; delay, not lost (no 'never arrived')"
