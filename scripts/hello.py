@@ -4,14 +4,24 @@ from openai import OpenAI
 load_dotenv()
 client = OpenAI()
 
+SYSTEM_PROMPT = """You are an internal triage classifier for Acme Freight support tickets.
+Do not reply to the customer. Output ONLY this format:
+
+Category: <delay | damage | lost | other> (list all that apply)
+Priority: <low | medium | high>
+Destination: <city or "unknown">
+Missing info: <comma-separated list>
+Next action: <one short sentence for the human agent>
+"""
+
 resp = client.chat.completions.create(
     model="gpt-4o-mini",
     max_tokens=300,
-    temperature=1.0,
+    temperature=0.0,
     messages=[
         {
             "role": "system",
-            "content": "You are a support triage assistant for Acme Freight, a logistics company.",
+            "content": SYSTEM_PROMPT,
         },
         {
             "role": "user",
